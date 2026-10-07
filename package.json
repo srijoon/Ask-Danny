@@ -1,0 +1,20 @@
+{
+  "name": "alsac",
+  "private": true,
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "setup": "npm install && npm run setup:backend",
+    "setup:backend": "cd backend && python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt",
+    "dev": "concurrently -n web,api -c cyan,magenta \"npm:dev:frontend\" \"npm:dev:backend\"",
+    "dev:frontend": "npm run dev -w frontend",
+    "dev:backend": "cd backend && .venv/bin/flask run",
+    "build": "npm run build -w frontend",
+    "lint": "npm run lint -w frontend",
+    "test": "cd backend && .venv/bin/pytest"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
