@@ -7,6 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 
 import { apiFetch, type User } from "@/lib/api";
 import { endDemoSession, hasDemoSession } from "@/lib/demo-auth";
+import { Wordmark } from "@/components/wordmark";
 
 export function Nav({ user }: { user: User | null }) {
   const pathname = usePathname();
@@ -34,40 +35,49 @@ export function Nav({ user }: { user: User | null }) {
   }
 
   return (
-    <header className="flex items-center justify-between border-b border-zinc-200 px-6 py-3 dark:border-zinc-800">
-      {/* brand + page links (current page underlined) */}
-      <div className="flex items-center gap-6">
-        <span className="font-semibold tracking-tight">Ask Danny</span>
-        <nav className="flex gap-4 text-sm">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={
-                pathname.startsWith(link.href)
-                  ? "font-medium text-black underline underline-offset-4 dark:text-zinc-50"
-                  : "text-zinc-500 hover:text-black dark:text-zinc-400 dark:hover:text-zinc-50"
-              }
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-      </div>
-      {/* who you're signed in as + sign out */}
-      <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
-        {user && (
-          <span>
-            {user.username}
-            {user.isAdmin ? " (admin)" : ""}
-          </span>
-        )}
-        <button
-          onClick={logout}
-          className="rounded border border-zinc-300 px-3 py-1 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
-        >
-          Sign out
-        </button>
+    // the thin red bar on top carries the brand across every signed-in page
+    <header className="border-t-[3px] border-b border-t-brand border-b-zinc-200 bg-white dark:border-b-zinc-800 dark:bg-zinc-950">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-2.5 sm:px-6">
+        {/* brand + page links (current page in red) */}
+        <div className="flex items-center gap-6">
+          <Link href="/dashboard" aria-label="Ask Danny home">
+            <Wordmark tone="light" />
+          </Link>
+          <nav className="flex gap-1 text-sm">
+            {links.map((link) => {
+              const active = pathname.startsWith(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={active ? "page" : undefined}
+                  className={
+                    active
+                      ? "rounded-md bg-brand-tint px-3 py-1.5 font-medium text-brand dark:bg-red-950/50 dark:text-red-300"
+                      : "rounded-md px-3 py-1.5 text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-50"
+                  }
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+        {/* who you're signed in as + sign out */}
+        <div className="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
+          {user && (
+            <span className="hidden sm:inline">
+              {user.username}
+              {user.isAdmin ? " (admin)" : ""}
+            </span>
+          )}
+          <button
+            onClick={logout}
+            className="rounded-md border border-zinc-300 px-3 py-1.5 text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900"
+          >
+            Sign out
+          </button>
+        </div>
       </div>
     </header>
   );

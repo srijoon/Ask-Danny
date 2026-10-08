@@ -109,7 +109,7 @@ export default function FilesPage() {
     <div className="flex min-h-full flex-1 flex-col bg-zinc-50 dark:bg-zinc-950">
       <Nav user={user} />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">
-        <h1 className="text-xl font-semibold tracking-tight">Files</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Files</h1>
 
         {/* upload form: file + pool + optional title */}
         <form
@@ -125,7 +125,7 @@ export default function FilesPage() {
             <select
               value={uploadPool}
               onChange={(e) => setUploadPool(e.target.value)}
-              className="rounded-md border border-zinc-300 bg-transparent px-2 py-1.5 outline-none transition-colors focus:border-ink focus:ring-2 focus:ring-ink/20 dark:border-zinc-700 dark:focus:border-zinc-300 dark:focus:ring-zinc-300/20"
+              className="rounded-md border border-zinc-300 bg-transparent px-2 py-1.5 outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20 dark:border-zinc-700 dark:focus:border-red-400 dark:focus:ring-red-400/20"
             >
               {pools.map((pool) => (
                 <option key={pool.id} value={pool.id}>
@@ -140,13 +140,13 @@ export default function FilesPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={200}
-              className="rounded-md border border-zinc-300 bg-transparent px-2 py-1.5 outline-none transition-colors focus:border-ink focus:ring-2 focus:ring-ink/20 dark:border-zinc-700 dark:focus:border-zinc-300 dark:focus:ring-zinc-300/20"
+              className="rounded-md border border-zinc-300 bg-transparent px-2 py-1.5 outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20 dark:border-zinc-700 dark:focus:border-red-400 dark:focus:ring-red-400/20"
             />
           </label>
           <button
             type="submit"
             disabled={busy}
-            className="rounded-md bg-ink px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-ink-soft disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="rounded-md bg-brand px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:outline-red-400"
           >
             {busy ? "Uploading…" : "Upload"}
           </button>
@@ -172,7 +172,7 @@ export default function FilesPage() {
           <select
             value={filterPool}
             onChange={(e) => changeFilter(e.target.value)}
-            className="rounded-md border border-zinc-300 bg-transparent px-2 py-1 text-sm outline-none transition-colors focus:border-ink focus:ring-2 focus:ring-ink/20 dark:border-zinc-700 dark:focus:border-zinc-300 dark:focus:ring-zinc-300/20"
+            className="rounded-md border border-zinc-300 bg-transparent px-2 py-1 text-sm outline-none transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20 dark:border-zinc-700 dark:focus:border-red-400 dark:focus:ring-red-400/20"
           >
             <option value="">All pools</option>
             {pools.map((pool) => (

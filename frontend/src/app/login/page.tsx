@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 
 import { apiFetch, ApiError, setCsrfToken, type User } from "@/lib/api";
 import { hasDemoSession, isDemoCredentials, startDemoSession } from "@/lib/demo-auth";
+import { Wordmark } from "@/components/wordmark";
 
 const INVALID_CREDENTIALS = "Invalid username or password.";
 
@@ -85,52 +86,54 @@ export default function LoginPage() {
   const inputClass =
     "w-full rounded-md border border-zinc-300 bg-white px-3 py-2.5 text-[15px] text-zinc-900 " +
     "outline-none transition-colors placeholder:text-zinc-400 " +
-    "focus:border-ink focus:ring-2 focus:ring-ink/20 " +
+    "focus:border-brand focus:ring-2 focus:ring-brand/20 " +
     "aria-invalid:border-red-500 " +
-    "dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-zinc-300 dark:focus:ring-zinc-300/20";
+    "dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:focus:border-red-400 dark:focus:ring-red-400/20";
 
   return (
     <div className="flex flex-1 flex-col md:flex-row">
       {/* brand panel: an example of what the product does, a cited answer */}
-      <aside className="hidden flex-col justify-between bg-ink px-12 py-12 text-zinc-100 md:flex md:w-[44%] lg:px-16">
-        <p className="text-lg font-semibold tracking-tight">Ask Danny</p>
+      <aside className="hidden flex-col justify-between bg-brand-deep px-12 py-12 text-red-50 md:flex md:w-[44%] lg:px-16">
+        <Wordmark />
 
         <div className="max-w-md">
           <h1 className="text-[2.5rem] leading-[1.1] font-semibold tracking-tight text-white">
             Answers from your team&apos;s documents.
           </h1>
-          <p className="mt-4 text-base leading-relaxed text-zinc-300">
+          <p className="mt-4 text-base leading-relaxed text-red-100/85">
             Every answer points to the pages it came from, and you only see documents you have
             access to.
           </p>
 
-          <figure className="mt-10 rounded-lg border border-white/10 bg-white/[0.04] p-5 text-sm leading-relaxed">
-            <figcaption className="text-xs text-zinc-400">Example question</figcaption>
+          <figure className="mt-10 rounded-lg border border-white/15 bg-black/15 p-5 text-sm leading-relaxed">
+            <figcaption className="text-xs text-red-100/70">Example question</figcaption>
             <p className="mt-1 font-medium text-white">How many vacation days do new hires get?</p>
-            <p className="mt-4 text-zinc-200">
+            <p className="mt-4 text-red-50">
               New hires get 15 vacation days in their first year
               <Cite n={1} />, which rises to 20 after three years of service
               <Cite n={2} />.
             </p>
-            <ol className="mt-4 space-y-1 border-t border-white/10 pt-3 text-xs text-zinc-400">
+            <ol className="mt-4 space-y-1 border-t border-white/15 pt-3 text-xs text-red-100/75">
               <li>
-                <span className="text-cite">[1]</span> Employee Handbook, page 12
+                <span className="font-semibold text-white">[1]</span> Employee Handbook, page 12
               </li>
               <li>
-                <span className="text-cite">[2]</span> Time Off Policy, page 3
+                <span className="font-semibold text-white">[2]</span> Time Off Policy, page 3
               </li>
             </ol>
           </figure>
         </div>
 
-        <p className="text-xs text-zinc-500">Internal use only</p>
+        <p className="text-xs text-red-100/60">For ALSAC staff. Internal use only.</p>
       </aside>
 
       {/* sign-in form */}
       <main className="flex flex-1 items-center justify-center bg-zinc-50 px-4 py-12 sm:px-8 dark:bg-zinc-950">
         <div className="w-full max-w-sm">
           {/* the brand panel is hidden on small screens, so name the app here */}
-          <p className="mb-8 text-lg font-semibold tracking-tight md:hidden">Ask Danny</p>
+          <div className="mb-8 md:hidden">
+            <Wordmark tone="light" />
+          </div>
 
           <h2 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
             Sign in
@@ -193,7 +196,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={busy}
-              className="mt-1 flex items-center justify-center gap-2 rounded-md bg-ink px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-ink-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200 dark:focus-visible:outline-zinc-50"
+              className="mt-1 flex items-center justify-center gap-2 rounded-md bg-brand px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:outline-red-400"
             >
               {busy && (
                 <span
@@ -210,9 +213,9 @@ export default function LoginPage() {
   );
 }
 
-// the amber citation marker from the example answer
+// the citation marker from the example answer
 function Cite({ n }: { n: number }) {
   return (
-    <sup className="ml-0.5 rounded bg-cite/15 px-1 text-[0.7rem] font-semibold text-cite">{n}</sup>
+    <sup className="ml-0.5 rounded bg-white/20 px-1 text-[0.7rem] font-semibold text-white">{n}</sup>
   );
 }

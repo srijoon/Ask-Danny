@@ -101,10 +101,10 @@ export default function DashboardPage() {
             <li key={item.href}>
               <Link
                 href={item.href}
-                className="group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-zinc-50 focus-visible:bg-zinc-50 focus-visible:outline-none dark:hover:bg-zinc-800/60 dark:focus-visible:bg-zinc-800/60"
+                className="group flex items-center justify-between gap-4 px-5 py-4 transition-colors hover:bg-brand-tint/60 focus-visible:bg-brand-tint/60 focus-visible:outline-none dark:hover:bg-red-950/30 dark:focus-visible:bg-red-950/30"
               >
                 <span>
-                  <span className="block font-medium text-zinc-900 dark:text-zinc-50">
+                  <span className="block font-medium text-zinc-900 group-hover:text-brand dark:text-zinc-50 dark:group-hover:text-red-300">
                     {item.title}
                   </span>
                   <span className="mt-0.5 block text-sm text-zinc-500 dark:text-zinc-400">
@@ -113,7 +113,7 @@ export default function DashboardPage() {
                 </span>
                 <span
                   aria-hidden
-                  className="text-zinc-400 transition-transform group-hover:translate-x-0.5 dark:text-zinc-500"
+                  className="text-lg text-zinc-400 transition-transform group-hover:translate-x-0.5 group-hover:text-brand dark:text-zinc-500"
                 >
                   ›
                 </span>

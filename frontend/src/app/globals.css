@@ -12,12 +12,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* brand colors: deep navy for the sign-in panel and primary buttons, amber
-   for citation markers like [1] */
+/* brand colors in the St. Jude / ALSAC red family: brand for buttons, your own
+   chat messages and citation markers like [1]; brand-deep for the sign-in
+   panel; brand-tint for soft backgrounds behind red text */
 @theme {
-  --color-ink: #1b2a41;
-  --color-ink-soft: #2a3d5a;
-  --color-cite: #f2b544;
+  --color-brand: #b3121f;
+  --color-brand-hover: #970f1a;
+  --color-brand-deep: #7f0c16;
+  --color-brand-tint: #fdeced;
 }
 
 @media (prefers-color-scheme: dark) {

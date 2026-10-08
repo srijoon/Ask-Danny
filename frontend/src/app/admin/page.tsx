@@ -47,7 +47,7 @@ export default function AdminPage() {
     <div className="flex min-h-full flex-1 flex-col bg-zinc-50 dark:bg-zinc-950">
       <Nav user={user} />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">
-        <h1 className="text-xl font-semibold tracking-tight">Admin</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Admin</h1>
 
         {/* access errors render as messages, not empty tables */}
         {forbidden && (
