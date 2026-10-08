@@ -22,12 +22,10 @@
   --color-brand-tint: #fdeced;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* light theme only: the dark: classes in the markup stay dormant unless a
+   .dark ancestor is ever added (nothing adds one). keeps the app white/red
+   even when the OS is in dark mode */
+@custom-variant dark (&:where(.dark, .dark *));
 
 body {
   background: var(--background);
