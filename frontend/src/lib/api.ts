@@ -98,19 +98,12 @@ export function setCsrfToken(token: string | null) {
   csrfToken = token;
 }
 
-// shown when Flask isn't running: the Next proxy then answers with a plain-text
-// "Internal Server Error" (or the request fails outright) instead of JSON
-export const SERVER_UNREACHABLE =
-  "Can't reach the Ask Danny server right now. Check that the backend is running, then try again.";
-
 async function csrf(): Promise<string> {
   // lazily fetch-and-cache the token; Flask mints one per session and the
   // before_request hook compares it on every mutation
   if (!csrfToken) {
-    const res = await fetch("/api/csrf").catch(() => null);
-    const data = res?.ok ? ((await res.json().catch(() => null)) as { csrfToken?: string } | null) : null;
-    if (!res || !data?.csrfToken) throw new ApiError(SERVER_UNREACHABLE, res?.status ?? 0, {});
-    csrfToken = data.csrfToken;
+    const res = await fetch("/api/csrf");
+    csrfToken = ((await res.json()) as { csrfToken: string }).csrfToken;
   }
   return csrfToken;
 }
@@ -135,10 +128,7 @@ export async function apiFetch<T>(
     body = options.form;
   }
 
-  const res = await fetch(path, { method, headers, body, credentials: "same-origin" }).catch(
-    () => null,
-  );
-  if (!res) throw new ApiError(SERVER_UNREACHABLE, 0, {});
+  const res = await fetch(path, { method, headers, body, credentials: "same-origin" });
 
   // a 401 means the session expired — bounce to login (except on /login itself,
   // where 401 just means wrong credentials). a hard navigation also clears any
@@ -154,8 +144,7 @@ export async function apiFetch<T>(
     // the API always sends {"error": "..."}; fall back to the HTTP status when
     // a response somehow isn't that shape (proxy down, HTML error page, etc.)
     const message =
-      (data as { error?: string } | null)?.error ??
-      (res.status >= 500 ? SERVER_UNREACHABLE : `Request failed (HTTP ${res.status})`);
+      (data as { error?: string } | null)?.error ?? `Request failed (HTTP ${res.status})`;
     throw new ApiError(message, res.status, (data as Record<string, unknown>) ?? {});
   }
   return data as T;
