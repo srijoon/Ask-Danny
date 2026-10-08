@@ -22,7 +22,7 @@ def login_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
         if g.user is None:
-            if request.is_json:
+            if request.is_json or request.blueprint == "api":
                 return {"error": "Your session expired. Please sign in again."}, 401
             return redirect(url_for("auth.login", next=request.full_path.rstrip("?")))
         return view(*args, **kwargs)
@@ -42,7 +42,8 @@ def admin_required(view):
 
 
 def _safe_next(target):
-    if target and target.startswith("/") and not target.startswith("//") and "\\" not in target:
+    if (target and target.startswith("/") and not target.startswith("//") and "\\" not in target
+            and target.isprintable()):
         return target
     return url_for("chat.index")
 
