@@ -1,7 +1,11 @@
+import csv
 import io
 import os
 import re
+import zipfile
 from dataclasses import dataclass
+
+MAX_DOCX_UNCOMPRESSED = 50 * 1024 * 1024
 
 
 @dataclass
@@ -70,6 +74,10 @@ def parse_docx(data):
     from docx import Document
     from docx.table import Table
 
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        if sum(info.file_size for info in archive.infolist()) > MAX_DOCX_UNCOMPRESSED:
+            raise ParseError("This DOCX expands to more than 50 MB, so it was not processed.")
+
     blocks = []
     for item in Document(io.BytesIO(data)).iter_inner_content():
         if isinstance(item, Table):
@@ -88,11 +96,28 @@ def parse_docx(data):
     return [Section(_clean("\n\n".join(b for b in blocks if b.strip())))]
 
 
-@register(".txt", ".md", ".markdown")
-def parse_text(data):
+def _decode(data):
     for encoding in ("utf-8-sig", "cp1252"):
         try:
-            return [Section(_clean(data.decode(encoding)))]
+            return data.decode(encoding)
         except UnicodeDecodeError:
             continue
-    return [Section(_clean(data.decode("latin-1")))]
+    return data.decode("latin-1")
+
+
+@register(".txt", ".md", ".markdown")
+def parse_text(data):
+    return [Section(_clean(_decode(data)))]
+
+
+@register(".csv")
+def parse_csv(data):
+    rows = csv.reader(io.StringIO(_decode(data)))
+    header = [name.strip() for name in next(rows, [])]
+    lines = []
+    for row in rows:
+        cells = [f"{name}: {value.strip()}" for name, value in zip(header, row)
+                 if name and value.strip()]
+        if cells:
+            lines.append("; ".join(cells))
+    return [Section(_clean("\n\n".join(lines)))]

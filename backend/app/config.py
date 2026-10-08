@@ -53,6 +53,7 @@ class Config:
 
     CHUNK_TOKENS = _int("CHUNK_TOKENS", 300)
     CHUNK_OVERLAP_TOKENS = _int("CHUNK_OVERLAP_TOKENS", 50)
+    MAX_CHUNKS_PER_DOCUMENT = _int("MAX_CHUNKS_PER_DOCUMENT", 500)
 
     LLM_PROVIDER = _str("LLM_PROVIDER", "openrouter").lower()
     CHAT_MODEL = _str("CHAT_MODEL", "google/gemma-4-31b-it:free")

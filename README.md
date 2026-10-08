@@ -9,10 +9,11 @@ Ask questions about internal documents and get cited answers, limited to what ea
 │   │   ├── auth/            login, users, login_required / admin_required
 │   │   ├── admin/           document upload + access, user management
 │   │   ├── chat/            chat UI, conversations, per-question answer flow
-│   │   ├── ingestion/       parsers (PDF/DOCX/TXT/MD), chunker, ingest service
+│   │   ├── ingestion/       parsers (PDF/DOCX/TXT/MD/CSV), chunker, ingest service
 │   │   ├── retrieval/       embeddings, $vectorSearch + $search, RRF, reranker, pipeline
 │   │   ├── generation/      llm.py (OpenRouter / Ollama behind one interface), prompts
 │   │   ├── permissions.py   access model
+│   │   ├── routes.py        JSON API (/api/*): session auth, files, admin
 │   │   ├── db.py            collections + Atlas index definitions
 │   │   └── cli.py           flask init-db / create-user / ingest / ask
 │   └── tests/
@@ -26,7 +27,14 @@ Prerequisites: Python 3.11+ and a free MongoDB Atlas M0 cluster. Node 20+ is onl
 
 ```bash
 npm run setup                      # or: cd backend && python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
-cp backend/.env.example backend/.env   # then set MONGODB_URI, OPENROUTER_API_KEY, FLASK_SECRET_KEY
+```
+
+Create `backend/.env` with the three required settings. Everything else has a default in `backend/app/config.py`.
+
+```
+MONGODB_URI=<your-atlas-uri>
+OPENROUTER_API_KEY=<your-openrouter-key>
+FLASK_SECRET_KEY=<long-random-string>
 ```
 
 On Linux servers, install the CPU-only PyTorch wheel first to skip ~2 GB of CUDA libraries: `pip install torch --index-url https://download.pytorch.org/whl/cpu`.
@@ -50,7 +58,7 @@ flask ingest docs/*.pdf --groups hr,finance     # bulk ingest (or --everyone)
 flask ask "How many vacation days do new hires get?" --user alice
 ```
 
-`npm run dev` still starts both the Next.js scaffold (:3000) and Flask (:8000). The RAG UI is the Jinja app on :8000.
+`npm run dev` starts both the Next.js frontend (:3000) and Flask (:8000). The Next.js app at :3000 is the simple API client: `/login`, `/ask` (chatbot), `/files` (pool-scoped upload/list/delete) and `/admin` (usage, users, groups). The Jinja app on :8000 is still there with its own chat and admin pages.
 
 ## How a question is answered
 
@@ -87,7 +95,46 @@ Every document and every one of its chunks stores `access`, a list of principals
 - `user:<username>`
 - `group:<g>` for each of their groups
 
-The Atlas queries return only chunks whose `access` shares at least one principal with the user's. Results are filtered again in Python as a safeguard. Changing a document's access updates its chunks, and Atlas indexes the change within seconds. Only admins can upload documents and manage users.
+The Atlas queries return only chunks whose `access` shares at least one principal with the user's. Results are filtered again in Python as a safeguard. Changing a document's access updates its chunks, and Atlas indexes the change within seconds.
+
+Admins manage users and can upload to any groups from the **Documents** page. Members upload to and delete from their own pools through the JSON API below.
+
+## JSON API
+
+Everything under `/api` speaks JSON, including errors (`{"error": "..."}`). It uses the same session cookie and CSRF protection as the web UI:
+
+1. `GET /api/csrf` returns `{"csrfToken": ...}`.
+2. `POST /api/login` with `{"username", "password"}` and the header `X-CSRF-Token: <token>`. The response carries the user and a **new** `csrfToken`.
+3. Send that token as `X-CSRF-Token` on every later `POST` / `DELETE`.
+
+**Pools.** A pool is `shared` (every signed-in user) or `group:<name>` (members of that group). A user's pools are `shared` plus one per group.
+
+| Endpoint | Who | What |
+| --- | --- | --- |
+| `GET /api/me` | signed in | user, groups and pools |
+| `POST /api/ask` | signed in | `{"question", "conversationId"?}` → answer with `status`, cited `sources`, the `searchQuery` actually used, and the `conversationId` to keep threading follow-ups |
+| `POST /api/logout` | anyone | clears the session |
+| `GET /api/files?poolId=` | signed in | documents you can see, newest first; `poolId` narrows to one of your pools |
+| `GET /api/files/:id` | can see it | one document's metadata |
+| `POST /api/files` | pool member | multipart `file` + `poolId`, optional `title` (≤ 200 chars) |
+| `DELETE /api/files/:id` | can see it | removes the document and its chunks |
+| `GET /api/admin/users` | admin | users and their groups |
+| `GET /api/admin/groups` | admin | every group with members and document counts |
+| `GET /api/admin/usage` | admin | documents, chunks, questions by status and user, answer calls skipped |
+
+Admins can list, read and delete any document and upload to any valid pool. Documents you can't see return 404, the same as missing ones.
+
+Upload responses:
+- `201` with the new document.
+- `400` for a missing file or bad `poolId`/title.
+- `403` for a pool you're not in.
+- `409` for a byte-identical file that already exists. `fileId` is only set when you can see the existing document.
+- `413` when the request is over `MAX_UPLOAD_MB`.
+- `415` for an unsupported type.
+- `422` when no text could be read, or the file needs more than `MAX_CHUNKS_PER_DOCUMENT` chunks (default 500).
+- `503` when the database is unreachable.
+
+CSV files are indexed one row per paragraph, as `Header: value; Header: value`. DOCX files that decompress past 50 MB are rejected before parsing.
 
 ## MongoDB Atlas free tier (M0)
 

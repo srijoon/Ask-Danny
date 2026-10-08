@@ -1,12 +1,11 @@
 from flask import Blueprint, abort, current_app, flash, g, redirect, render_template, request, url_for
-from werkzeug.utils import secure_filename
 
 from ..auth.routes import admin_required
 from ..auth.users import (UserError, create_user, delete_user, known_groups, list_users,
                           to_object_id, update_user)
 from ..db import DOCUMENTS, get_db, search_index_status
 from ..ingestion.parsers import supported_extensions
-from ..ingestion.service import IngestionError, delete_document, ingest_document, set_document_access
+from ..ingestion.service import IngestionError, clean_filename, delete_document, ingest_document, set_document_access
 from ..generation.llm import get_llm
 from ..permissions import EVERYONE, access_groups, describe_access, document_access
 
@@ -63,7 +62,7 @@ def upload():
 
     title = request.form.get("title", "").strip() if len(files) == 1 else None
     for file in files:
-        filename = secure_filename(file.filename) or "upload"
+        filename = clean_filename(file.filename) or "upload"
         try:
             doc = ingest_document(filename, file.read(), access=access,
                                   uploaded_by=g.user["username"], title=title)

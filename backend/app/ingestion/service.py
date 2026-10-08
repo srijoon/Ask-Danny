@@ -20,6 +20,14 @@ class IngestionError(Exception):
     pass
 
 
+def clean_filename(name):
+    name = os.path.basename((name or "").replace("\\", "/")).strip()
+    if len(name) <= 255:
+        return name
+    stem, ext = os.path.splitext(name)
+    return stem[: 255 - len(ext)] + ext if len(ext) <= 16 else name[:255]
+
+
 def ingest_document(filename, data, *, access, uploaded_by, title=None):
     cfg = current_app.config
     db = get_db()
@@ -50,6 +58,11 @@ def ingest_document(filename, data, *, access, uploaded_by, title=None):
     if not pieces:
         raise IngestionError(
             f"No text could be extracted from {filename}. Scanned PDFs need OCR first."
+        )
+    if len(pieces) > cfg["MAX_CHUNKS_PER_DOCUMENT"]:
+        raise IngestionError(
+            f"{filename} is too long ({len(pieces)} chunks; the limit is "
+            f"{cfg['MAX_CHUNKS_PER_DOCUMENT']}). Split it into smaller files."
         )
 
     vectors = embedder.embed_documents([passage_text(title, text) for _, text in pieces])
