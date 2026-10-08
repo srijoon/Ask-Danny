@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block body_class %}chat-page{% endblock %}
+{% block content %}
+<div class="chat-layout">
+  <aside class="sidebar">
+    <a class="button primary new-chat" href="{{ url_for('chat.index') }}">+ New chat</a>
+    <ul class="conversations" id="conversation-list">
+      {% for c in conversations %}
+      <li class="{{ 'active' if active and active._id == c._id }}">
+        <a href="{{ url_for('chat.index', c=c._id|string) }}" title="{{ c.title }}">{{ c.title }}</a>
+      </li>
+      {% else %}
+      <li class="muted empty">No conversations yet.</li>
+      {% endfor %}
+    </ul>
+  </aside>
+
+  <main class="chat">
+    {% if active %}
+    <div class="chat-header">
+      <h2>{{ active.title }}</h2>
+      <form method="post" action="{{ url_for('chat.delete', conversation_id=active._id|string) }}"
+            onsubmit="return confirm('Delete this conversation?')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="link danger">Delete</button>
+      </form>
+    </div>
+    {% endif %}
+
+    <div class="messages" id="messages">
+      <div class="welcome" id="welcome" {% if messages %}hidden{% endif %}>
+        <h2>What would you like to know?</h2>
+        <p class="muted">Answers come only from documents you have access to, with numbered sources.</p>
+      </div>
+    </div>
+
+    <form class="composer" id="composer">
+      <textarea id="question" rows="1" maxlength="2000" placeholder="Ask a question about your documents…" required></textarea>
+      <button type="submit" class="primary" id="send">Ask</button>
+    </form>
+  </main>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  window.CHAT = {
+    askUrl: {{ url_for('chat.ask')|tojson }},
+    conversationId: {{ (active._id|string if active else none)|tojson }},
+    messages: {{ messages|tojson }},
+  };
+</script>
+<script src="{{ url_for('static', filename='chat.js') }}"></script>
+{% endblock %}

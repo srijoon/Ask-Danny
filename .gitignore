@@ -10,6 +10,7 @@ __pycache__/
 # Env / secrets
 .env
 .env.local
+.env.example
 
 # OS / editors
 .DS_Store

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Sign in · Ask-Danny{% endblock %}
+{% block body_class %}centered{% endblock %}
+{% block content %}
+<main class="card login">
+  <h1>Ask-Danny</h1>
+  <p class="muted">Sign in to ask questions about your documents.</p>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Username <input name="username" autocomplete="username" required autofocus></label>
+    <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+    <button type="submit" class="primary">Sign in</button>
+  </form>
+</main>
+{% endblock %}

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}Ask-Danny{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  {% if g.user %}
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('chat.index') }}">Ask-Danny</a>
+    <nav>
+      <a href="{{ url_for('chat.index') }}" class="{{ 'active' if request.blueprint == 'chat' }}">Chat</a>
+      {% if g.user.is_admin %}
+      <a href="{{ url_for('admin.documents') }}" class="{{ 'active' if request.endpoint == 'admin.documents' }}">Documents</a>
+      <a href="{{ url_for('admin.users') }}" class="{{ 'active' if request.endpoint == 'admin.users' }}">Users</a>
+      {% endif %}
+    </nav>
+    <form method="post" action="{{ url_for('auth.logout') }}" class="logout">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <span class="muted">{{ g.user.username }}</span>
+      <button type="submit" class="link">Sign out</button>
+    </form>
+  </header>
+  {% endif %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flashes">
+    {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+  {% block scripts %}{% endblock %}
+</body>
+</html>

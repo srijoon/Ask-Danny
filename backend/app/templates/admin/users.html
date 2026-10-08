@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Users · Ask-Danny{% endblock %}
+{% block content %}
+<main class="page">
+  <h1>Users</h1>
+
+  <section class="card">
+    <h2>Add a user</h2>
+    <form method="post" class="inline-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input name="username" placeholder="Username" required>
+      <input name="password" type="password" placeholder="Password (8+ characters)" minlength="8" required autocomplete="new-password">
+      <input name="groups" placeholder="Groups, e.g. hr, finance">
+      <label class="check"><input type="checkbox" name="is_admin" value="1"> Admin</label>
+      <button type="submit" class="primary">Add user</button>
+    </form>
+    {% if groups %}<p class="muted small">Existing groups: {{ groups|join(', ') }}</p>{% endif %}
+  </section>
+
+  <section class="card">
+    <table>
+      <thead><tr><th>User</th><th>Groups</th><th>Admin</th><th>New password</th><th></th></tr></thead>
+      <tbody>
+      {% for user in users %}
+      <tr>
+        <td><strong>{{ user.username }}</strong></td>
+        <td><input name="groups" form="edit-{{ user._id }}" value="{{ user.groups|join(', ') }}" placeholder="No groups"></td>
+        <td><input type="checkbox" name="is_admin" value="1" form="edit-{{ user._id }}" {{ 'checked' if user.is_admin }}></td>
+        <td><input name="password" type="password" form="edit-{{ user._id }}" placeholder="Unchanged" minlength="8" autocomplete="new-password"></td>
+        <td class="actions">
+          <form method="post" action="{{ url_for('admin.edit_user', user_id=user._id|string) }}" id="edit-{{ user._id }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit">Save</button>
+          </form>
+          {% if user._id != g.user._id %}
+          <form method="post" action="{{ url_for('admin.remove_user', user_id=user._id|string) }}"
+                onsubmit="return confirm('Delete {{ user.username }}?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="link danger">Delete</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</main>
+{% endblock %}

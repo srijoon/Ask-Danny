@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Documents · Ask-Danny{% endblock %}
+
+{% macro access_picker(groups, selected=[], everyone=false) %}
+<fieldset class="access">
+  <legend>Who can see it</legend>
+  <label class="check"><input type="checkbox" name="everyone" value="1" {{ 'checked' if everyone }}> Everyone</label>
+  {% for group in groups %}
+  <label class="check"><input type="checkbox" name="groups" value="{{ group }}" {{ 'checked' if group in selected }}> {{ group }}</label>
+  {% endfor %}
+  <input name="new_groups" placeholder="New groups, comma-separated (e.g. hr, finance)">
+</fieldset>
+{% endmacro %}
+
+{% block content %}
+<main class="page">
+  <h1>Documents</h1>
+
+  <section class="status card">
+    <div><span class="muted">Search mode</span><strong>{{ status.mode }}</strong></div>
+    <div><span class="muted">Vector index</span><strong class="state {{ status.vector|lower }}">{{ status.vector }}</strong></div>
+    <div><span class="muted">Keyword index</span><strong class="state {{ status.text|lower }}">{{ status.text }}</strong></div>
+    <div><span class="muted">LLM</span><strong>{{ llm }}</strong></div>
+    <div><span class="muted">Query rewriting</span><strong>{{ 'On (follow-ups only)' if rewrite else 'Off' }}</strong></div>
+  </section>
+  {% if status.vector != 'READY' %}
+  <p class="flash error">The vector index isn't ready, so questions won't find anything yet. Run <code>flask init-db</code> and wait for Atlas to build it.</p>
+  {% endif %}
+
+  <section class="card">
+    <h2>Upload</h2>
+    <form method="post" enctype="multipart/form-data" class="upload">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>Files ({{ extensions|join(', ') }})
+        <input type="file" name="files" multiple required accept="{{ extensions|join(',') }}">
+      </label>
+      <label>Title <span class="muted">(optional, single file only; defaults to the filename)</span>
+        <input name="title">
+      </label>
+      {{ access_picker(groups) }}
+      <button type="submit" class="primary">Upload and index</button>
+      <p class="muted small">Files are parsed, chunked and embedded on this server. Large PDFs take a little while.</p>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>{{ documents|length }} document{{ '' if documents|length == 1 else 's' }}</h2>
+    {% if documents %}
+    <table>
+      <thead><tr><th>Title</th><th>Access</th><th>Chunks</th><th>Uploaded</th><th></th></tr></thead>
+      <tbody>
+      {% for doc in documents %}
+      <tr>
+        <td><strong>{{ doc.title }}</strong><div class="muted small">{{ doc.filename }}</div></td>
+        <td>{{ doc.access_label }}</td>
+        <td>{{ doc.chunk_count }}</td>
+        <td>{{ doc.uploaded_by }}<div class="muted small">{{ doc.created_at.strftime('%Y-%m-%d') }}</div></td>
+        <td class="actions">
+          <details>
+            <summary>Edit access</summary>
+            <form method="post" action="{{ url_for('admin.change_access', doc_id=doc._id|string) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              {{ access_picker(groups, doc.access_groups, 'everyone' in doc.access) }}
+              <button type="submit">Save</button>
+            </form>
+          </details>
+          <form method="post" action="{{ url_for('admin.remove_document', doc_id=doc._id|string) }}"
+                onsubmit="return confirm('Delete this document and all of its chunks?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="link danger">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No documents yet.</p>
+    {% endif %}
+  </section>
+</main>
+{% endblock %}
