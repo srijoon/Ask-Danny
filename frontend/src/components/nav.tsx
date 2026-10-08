@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 import { apiFetch, type User } from "@/lib/api";
+import { endDemoSession, hasDemoSession } from "@/lib/demo-auth";
 
 export function Nav({ user }: { user: User | null }) {
   const pathname = usePathname();
@@ -14,15 +15,21 @@ export function Nav({ user }: { user: User | null }) {
   // user is null while /api/me is still loading — links render immediately,
   // the Admin link just appears a beat later once we know the role
   const links = [
+    { href: "/dashboard", label: "Home" },
     { href: "/ask", label: "Ask" },
     { href: "/files", label: "Files" },
     ...(user?.isAdmin ? [{ href: "/admin", label: "Admin" }] : []),
   ];
 
   async function logout() {
-    // tell Flask to clear the session server-side; ignore failures — a dead
+    // the prototype account has no server session, so just drop the browser
+    // flag. otherwise tell Flask to clear the session; ignore failures — a dead
     // session still ends with the user on /login, which is the goal anyway
-    await apiFetch("/api/logout", { method: "POST" }).catch(() => {});
+    if (hasDemoSession()) {
+      endDemoSession();
+    } else {
+      await apiFetch("/api/logout", { method: "POST" }).catch(() => {});
+    }
     router.push("/login");
   }
 

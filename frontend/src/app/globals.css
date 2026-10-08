@@ -12,6 +12,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* brand colors: deep navy for the sign-in panel and primary buttons, amber
+   for citation markers like [1] */
+@theme {
+  --color-ink: #1b2a41;
+  --color-ink-soft: #2a3d5a;
+  --color-cite: #f2b544;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -22,5 +30,6 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  /* the layout already loads Geist; Arial here was overriding it */
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }

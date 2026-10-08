@@ -87,12 +87,12 @@ export default function AskPage() {
   }
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    <div className="flex min-h-full flex-1 flex-col bg-zinc-50 dark:bg-zinc-950">
       <Nav user={user} />
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-4">
         {/* header: title + "New chat" once a conversation exists */}
         <div className="flex items-center justify-between py-3">
-          <h1 className="text-lg font-semibold">Ask</h1>
+          <h1 className="text-lg font-semibold tracking-tight">Ask</h1>
           {conversationId && (
             <button
               onClick={() => {
@@ -118,7 +118,7 @@ export default function AskPage() {
             // user bubbles on the right, assistant answers on the left
             msg.role === "user" ? (
               <div key={i} className="flex justify-end">
-                <div className="max-w-[80%] rounded-2xl bg-black px-4 py-2 text-sm whitespace-pre-wrap text-white dark:bg-zinc-50 dark:text-black">
+                <div className="max-w-[80%] rounded-2xl bg-ink px-4 py-2 text-sm whitespace-pre-wrap text-white dark:bg-zinc-50 dark:text-zinc-900">
                   {msg.content}
                 </div>
               </div>
@@ -126,7 +126,7 @@ export default function AskPage() {
               <div key={i} className="flex justify-start">
                 <div className="max-w-[80%] space-y-2">
                   {/* the answer bubble; non-"ok" statuses get a colored badge */}
-                  <div className="rounded-2xl border border-zinc-200 px-4 py-2 text-sm whitespace-pre-wrap dark:border-zinc-800">
+                  <div className="rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm whitespace-pre-wrap dark:border-zinc-800 dark:bg-zinc-900">
                     {msg.status && msg.status !== "ok" && (
                       <span
                         className={`mr-2 inline-block rounded px-1.5 py-0.5 text-xs font-medium ${STATUS_STYLE[msg.status] ?? ""}`}
@@ -148,10 +148,12 @@ export default function AskPage() {
                       {msg.sources.map((source) => (
                         <details
                           key={source.n}
-                          className="rounded border border-zinc-200 px-3 py-1.5 text-xs dark:border-zinc-800"
+                          className="rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs dark:border-zinc-800 dark:bg-zinc-900"
                         >
                           <summary className="cursor-pointer text-zinc-600 dark:text-zinc-400">
-                            [{source.n}] {source.title}
+                            {/* amber citation marker, same as the sign-in page's example answer */}
+                            <span className="font-semibold text-cite">[{source.n}]</span>{" "}
+                            {source.title}
                             {source.page ? `, page ${source.page}` : ""}
                             <span className="text-zinc-400">
                               {" "}
@@ -172,7 +174,11 @@ export default function AskPage() {
           {/* pending indicator while the backend pipeline runs */}
           {busy && (
             <div className="flex justify-start">
-              <div className="rounded-2xl border border-zinc-200 px-4 py-2 text-sm text-zinc-500 dark:border-zinc-800">
+              <div className="flex items-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-2 text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900">
+                <span
+                  aria-hidden
+                  className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none"
+                />
                 Thinking…
               </div>
             </div>
@@ -188,12 +194,12 @@ export default function AskPage() {
             placeholder="Ask a question…"
             maxLength={2000}
             disabled={busy}
-            className="flex-1 rounded-full border border-zinc-300 bg-transparent px-4 py-2 text-sm dark:border-zinc-700"
+            className="flex-1 rounded-full border border-zinc-300 bg-white px-4 py-2 text-sm outline-none transition-colors placeholder:text-zinc-400 focus:border-ink focus:ring-2 focus:ring-ink/20 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:border-zinc-300 dark:focus:ring-zinc-300/20"
           />
           <button
             type="submit"
             disabled={busy || !input.trim()}
-            className="rounded-full bg-black px-5 py-2 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-40 dark:bg-zinc-50 dark:text-black dark:hover:bg-zinc-200"
+            className="rounded-full bg-ink px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-ink-soft disabled:opacity-40 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             Send
           </button>

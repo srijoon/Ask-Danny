@@ -106,15 +106,15 @@ export default function FilesPage() {
   const pools = user?.pools ?? [];
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    <div className="flex min-h-full flex-1 flex-col bg-zinc-50 dark:bg-zinc-950">
       <Nav user={user} />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">
-        <h1 className="text-lg font-semibold">Files</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Files</h1>
 
         {/* upload form: file + pool + optional title */}
         <form
           onSubmit={upload}
-          className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-zinc-200 p-4 dark:border-zinc-800"
+          className="mt-4 flex flex-wrap items-end gap-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900"
         >
           <label className="flex flex-col gap-1 text-sm">
             File
@@ -125,7 +125,7 @@ export default function FilesPage() {
             <select
               value={uploadPool}
               onChange={(e) => setUploadPool(e.target.value)}
-              className="rounded border border-zinc-300 bg-transparent px-2 py-1.5 dark:border-zinc-700"
+              className="rounded-md border border-zinc-300 bg-transparent px-2 py-1.5 outline-none transition-colors focus:border-ink focus:ring-2 focus:ring-ink/20 dark:border-zinc-700 dark:focus:border-zinc-300 dark:focus:ring-zinc-300/20"
             >
               {pools.map((pool) => (
                 <option key={pool.id} value={pool.id}>
@@ -140,21 +140,29 @@ export default function FilesPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               maxLength={200}
-              className="rounded border border-zinc-300 bg-transparent px-2 py-1.5 dark:border-zinc-700"
+              className="rounded-md border border-zinc-300 bg-transparent px-2 py-1.5 outline-none transition-colors focus:border-ink focus:ring-2 focus:ring-ink/20 dark:border-zinc-700 dark:focus:border-zinc-300 dark:focus:ring-zinc-300/20"
             />
           </label>
           <button
             type="submit"
             disabled={busy}
-            className="rounded bg-black px-4 py-1.5 text-sm font-medium text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-50 dark:text-black dark:hover:bg-zinc-200"
+            className="rounded-md bg-ink px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-ink-soft disabled:opacity-50 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
             {busy ? "Uploading…" : "Upload"}
           </button>
         </form>
 
         {/* result banners: green for success, red for the API's error message */}
-        {notice && <p className="mt-3 text-sm text-green-700 dark:text-green-400">{notice}</p>}
-        {error && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {notice && (
+          <p className="mt-3 rounded-md border border-green-200 bg-green-50 px-3 py-2.5 text-sm text-green-800 dark:border-green-900 dark:bg-green-950/50 dark:text-green-300">
+            {notice}
+          </p>
+        )}
+        {error && (
+          <p className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300">
+            {error}
+          </p>
+        )}
 
         {/* list header: count + the pool filter */}
         <div className="mt-6 flex items-center justify-between">
@@ -164,7 +172,7 @@ export default function FilesPage() {
           <select
             value={filterPool}
             onChange={(e) => changeFilter(e.target.value)}
-            className="rounded border border-zinc-300 bg-transparent px-2 py-1 text-sm dark:border-zinc-700"
+            className="rounded-md border border-zinc-300 bg-transparent px-2 py-1 text-sm outline-none transition-colors focus:border-ink focus:ring-2 focus:ring-ink/20 dark:border-zinc-700 dark:focus:border-zinc-300 dark:focus:ring-zinc-300/20"
           >
             <option value="">All pools</option>
             {pools.map((pool) => (
@@ -176,7 +184,7 @@ export default function FilesPage() {
         </div>
 
         {/* the file list — one row per document, with a delete button */}
-        <ul className="mt-3 divide-y divide-zinc-200 rounded-lg border border-zinc-200 dark:divide-zinc-800 dark:border-zinc-800">
+        <ul className="mt-3 divide-y divide-zinc-200 overflow-hidden rounded-lg border border-zinc-200 bg-white dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-900">
           {files.map((doc) => (
             <li key={doc.id} className="flex items-center justify-between gap-4 px-4 py-3">
               <div className="min-w-0">
@@ -189,7 +197,7 @@ export default function FilesPage() {
               </div>
               <button
                 onClick={() => remove(doc)}
-                className="shrink-0 rounded border border-red-300 px-3 py-1 text-xs text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950"
+                className="shrink-0 rounded-md border border-red-300 px-3 py-1 text-xs text-red-700 transition-colors hover:bg-red-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950"
               >
                 Delete
               </button>

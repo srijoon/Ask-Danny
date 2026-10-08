@@ -44,18 +44,22 @@ export default function AdminPage() {
   }, []);
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    <div className="flex min-h-full flex-1 flex-col bg-zinc-50 dark:bg-zinc-950">
       <Nav user={user} />
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">
-        <h1 className="text-lg font-semibold">Admin</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Admin</h1>
 
         {/* access errors render as messages, not empty tables */}
         {forbidden && (
-          <p className="mt-6 text-sm text-red-600 dark:text-red-400">
+          <p className="mt-6 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300">
             Admin access required.
           </p>
         )}
-        {error && <p className="mt-6 text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && (
+          <p className="mt-6 rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300">
+            {error}
+          </p>
+        )}
 
         {/* usage cards + the detail line under them */}
         {usage && (
@@ -70,9 +74,9 @@ export default function AdminPage() {
               ].map(([label, value]) => (
                 <div
                   key={label}
-                  className="rounded-lg border border-zinc-200 p-3 dark:border-zinc-800"
+                  className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-900"
                 >
-                  <p className="text-2xl font-semibold">{value}</p>
+                  <p className="text-2xl font-semibold tracking-tight">{value}</p>
                   <p className="text-xs text-zinc-500">{label}</p>
                 </div>
               ))}
@@ -99,24 +103,26 @@ export default function AdminPage() {
         {users.length > 0 && (
           <section className="mt-8">
             <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Users</h2>
-            <table className="mt-2 w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-zinc-200 text-xs text-zinc-500 dark:border-zinc-800">
-                  <th className="py-2 font-medium">Username</th>
-                  <th className="py-2 font-medium">Groups</th>
-                  <th className="py-2 font-medium">Admin</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u.id} className="border-b border-zinc-100 dark:border-zinc-900">
-                    <td className="py-2">{u.username}</td>
-                    <td className="py-2">{u.groups.join(", ") || "—"}</td>
-                    <td className="py-2">{u.isAdmin ? "yes" : ""}</td>
+            <div className="mt-2 overflow-hidden rounded-lg border border-zinc-200 bg-white px-4 dark:border-zinc-800 dark:bg-zinc-900">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-200 text-xs text-zinc-500 dark:border-zinc-700">
+                    <th className="py-2 font-medium">Username</th>
+                    <th className="py-2 font-medium">Groups</th>
+                    <th className="py-2 font-medium">Admin</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {users.map((u) => (
+                    <tr key={u.id} className="border-b border-zinc-100 last:border-0 dark:border-zinc-800">
+                      <td className="py-2">{u.username}</td>
+                      <td className="py-2">{u.groups.join(", ") || "—"}</td>
+                      <td className="py-2">{u.isAdmin ? "yes" : ""}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
         )}
 
@@ -124,24 +130,26 @@ export default function AdminPage() {
         {groups.length > 0 && (
           <section className="mt-8">
             <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Groups</h2>
-            <table className="mt-2 w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-zinc-200 text-xs text-zinc-500 dark:border-zinc-800">
-                  <th className="py-2 font-medium">Name</th>
-                  <th className="py-2 font-medium">Members</th>
-                  <th className="py-2 font-medium">Documents</th>
-                </tr>
-              </thead>
-              <tbody>
-                {groups.map((grp) => (
-                  <tr key={grp.id} className="border-b border-zinc-100 dark:border-zinc-900">
-                    <td className="py-2">{grp.name}</td>
-                    <td className="py-2">{grp.members.join(", ") || "—"}</td>
-                    <td className="py-2">{grp.documentCount}</td>
+            <div className="mt-2 overflow-hidden rounded-lg border border-zinc-200 bg-white px-4 dark:border-zinc-800 dark:bg-zinc-900">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-200 text-xs text-zinc-500 dark:border-zinc-700">
+                    <th className="py-2 font-medium">Name</th>
+                    <th className="py-2 font-medium">Members</th>
+                    <th className="py-2 font-medium">Documents</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {groups.map((grp) => (
+                    <tr key={grp.id} className="border-b border-zinc-100 last:border-0 dark:border-zinc-800">
+                      <td className="py-2">{grp.name}</td>
+                      <td className="py-2">{grp.members.join(", ") || "—"}</td>
+                      <td className="py-2">{grp.documentCount}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
         )}
       </main>
