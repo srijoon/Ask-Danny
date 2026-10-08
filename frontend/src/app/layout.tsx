@@ -1,3 +1,6 @@
+// Root layout: fonts, metadata, and the full-height flex shell every page
+// renders into. Auth isn't enforced here — each page relies on apiFetch's
+// 401 → /login redirect, and /login itself must render without a session.
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -13,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "alsac",
-  description: "Next.js + Flask monorepo",
+  title: "Ask Danny",
+  description: "Ask questions about your team's documents",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
