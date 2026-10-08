@@ -1,3 +1,6 @@
+# Prompts for the two LLM calls: answer generation (rules + numbered excerpts +
+# question) and rewriting follow-ups into standalone search queries. The [n]
+# excerpt labels line up with the source list built in chat/answer.py.
 # Gemma has no system role, so instructions go in the user message.
 
 ANSWER_INSTRUCTIONS = """You are Ask-Danny, an assistant that answers questions from internal documents.
@@ -13,15 +16,21 @@ REWRITE_INSTRUCTIONS = """Rewrite the user's latest question as a standalone sea
 
 Reply with the search query only: no quotes, no explanation."""
 
+# per-turn caps so old conversation can't flood the prompt; the rewrite needs far
+# less context than the answer does, so it gets the smaller budget
 _HISTORY_CHARS = 1500
 _REWRITE_HISTORY_CHARS = 500
 
 
 def _clip(text, limit):
+    """Truncate text to a char budget with an ellipsis marker."""
     return text if len(text) <= limit else text[:limit].rstrip() + " …"
 
 
 def format_excerpts(chunks):
+    """Render retrieved chunks as '[n] title, page' + text for the answer prompt."""
+    # the [n] labels are what the model cites and what the UI links back to the
+    # sources list — the numbers must stay in sync with _source() in answer.py
     parts = []
     for number, chunk in enumerate(chunks, start=1):
         label = chunk["title"]
@@ -32,6 +41,9 @@ def format_excerpts(chunks):
 
 
 def build_answer_messages(question, history, chunks):
+    """Messages for the answer call: clipped history + instructions + excerpts + question."""
+    # clipped history first, then one final user message holding instructions +
+    # excerpts + question, so the model reads its rules right before answering
     messages = [
         {"role": turn["role"], "content": _clip(turn["content"], _HISTORY_CHARS)} for turn in history
     ]
@@ -49,6 +61,9 @@ def build_answer_messages(question, history, chunks):
 
 
 def build_rewrite_messages(question, history):
+    """Messages for the rewrite call: a flat transcript + the follow-up question."""
+    # a flat "User:/Assistant:" transcript is enough to resolve "it"/"that policy";
+    # no need to spend tokens on full chat roles
     transcript = "\n".join(
         f"{'User' if turn['role'] == 'user' else 'Assistant'}: "
         f"{_clip(turn['content'], _REWRITE_HISTORY_CHARS)}"
@@ -68,11 +83,15 @@ def build_rewrite_messages(question, history):
 
 
 def clean_rewritten_query(text, fallback):
+    """Pull the query line out of chatty model output; fallback on anything odd."""
+    # models don't always obey "reply with the query only" — strip preamble lines,
+    # quote marks, and their own labels; on anything odd, the original question wins
     for line in text.splitlines():
         line = line.strip().strip("\"'`").strip()
         for prefix in ("Standalone search query:", "Search query:", "Query:"):
             if line.lower().startswith(prefix.lower()):
                 line = line[len(prefix):].strip().strip("\"'`").strip()
         if line:
+            # a "query" far longer than the original question almost certainly isn't one
             return line if len(line) <= 500 else fallback
     return fallback

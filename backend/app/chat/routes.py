@@ -1,3 +1,6 @@
+# The chat UI and its JSON endpoint: GET / renders the page, POST /chat/ask runs
+# the RAG pipeline in chat/answer.py and persists exchanges via
+# chat/conversations.py. Conversation history is always scoped to g.user.
 import logging
 
 from flask import Blueprint, abort, current_app, g, jsonify, redirect, render_template, request, url_for
@@ -13,18 +16,22 @@ log = logging.getLogger(__name__)
 
 bp = Blueprint("chat", __name__)
 
+# bounds what we forward to the LLM; also a sanity cap on junk input
 MAX_QUESTION_CHARS = 2000
 
 
 @bp.get("/")
 @login_required
 def index():
+    """Render the chat page; ?c=<id> reopens a conversation the user owns."""
     db = get_db()
     active = None
     if request.args.get("c"):
+        # get_for_user scopes by user_id, so poking someone else's id just 404s
         active = conversations.get_for_user(db, request.args["c"], g.user["_id"])
         if active is None:
             abort(404)
+    # the template gets only the fields it renders, never the raw document
     messages = [
         {key: m.get(key) for key in ("role", "content", "status", "sources", "search_query")}
         for m in (active or {}).get("messages", [])
@@ -40,6 +47,8 @@ def index():
 @bp.post("/chat/ask")
 @login_required
 def ask():
+    """The web UI's question endpoint — the Next.js frontend uses /api/ask instead."""
+    # silent=True so malformed JSON becomes {} and hits the "empty question" path
     data = request.get_json(silent=True) or {}
     question = str(data.get("question") or "").strip()
     if not question:
@@ -57,6 +66,8 @@ def ask():
     history = conversations.recent_history(conversation, current_app.config["CHAT_HISTORY_TURNS"])
     try:
         answer = answer_question(question, history, principals_for(g.user))
+        # the conversation row is created only after an answer exists, so a failed
+        # first question doesn't leave an empty thread in the sidebar
         if conversation is None:
             conversation = conversations.create(db, g.user["_id"], question)
         conversations.append_exchange(db, conversation["_id"], question, answer)
@@ -79,5 +90,7 @@ def ask():
 @bp.post("/chat/<conversation_id>/delete")
 @login_required
 def delete(conversation_id):
+    """Remove one of the user's own conversations."""
+    # scoped by user_id like get_for_user: the filter itself is the authorization
     conversations.delete(get_db(), conversation_id, g.user["_id"])
     return redirect(url_for("chat.index"))

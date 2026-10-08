@@ -1,3 +1,7 @@
+# The retrieval funnel: embed the question, over-fetch from vector (and optional
+# keyword) search, fuse the rankings, re-check access, rerank with the local
+# cross-encoder, and keep only chunks over the score bar. Called by
+# chat/answer.py — it never touches the LLM itself.
 import logging
 from dataclasses import dataclass, field
 
@@ -21,6 +25,9 @@ class RetrievalResult:
 
 
 def retrieve(query, principals):
+    """Run the full retrieval funnel for a query and a user's access principals."""
+    # the funnel: over-fetch from vector (and optionally keyword) search, fuse the
+    # rankings, re-score the shortlist with a cross-encoder, keep the best few
     cfg = current_app.config
     chunks = get_db()[CHUNKS]
 
@@ -44,6 +51,7 @@ def retrieve(query, principals):
             )
             mode = "hybrid"
         except OperationFailure as exc:
+            # a missing or still-building text index shouldn't take down the whole answer
             log.warning("Keyword search failed (%s); continuing with vector search only.", exc)
 
     merged = reciprocal_rank_fusion(result_lists, k=cfg["RRF_K"])
@@ -51,12 +59,16 @@ def retrieve(query, principals):
     allowed = set(principals)
     merged = [hit for hit in merged if allowed.intersection(hit.get("access", []))]
 
+    # the cross-encoder reads query and chunk together, which judges relevance far
+    # better than embedding distance — but it's slow, so it only sees the shortlist
     candidates = merged[: cfg["RERANK_CANDIDATES"]]
     scores = get_reranker().score(query, [passage_text(h["title"], h["text"]) for h in candidates])
     for hit, score in zip(candidates, scores):
         hit["rerank_score"] = score
     ranked = sorted(candidates, key=lambda hit: hit["rerank_score"], reverse=True)
 
+    # below the score bar we return nothing at all — the caller then skips the
+    # LLM entirely, which is where the real cost saving is
     passing = [hit for hit in ranked if hit["rerank_score"] >= cfg["RERANK_MIN_SCORE"]]
     return RetrievalResult(
         chunks=passing[: cfg["FINAL_TOP_K"]],

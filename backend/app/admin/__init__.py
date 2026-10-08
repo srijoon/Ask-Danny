@@ -1,0 +1,1 @@
+# admin: the admin-only HTML pages for managing documents and users.

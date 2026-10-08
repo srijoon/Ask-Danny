@@ -1,3 +1,6 @@
+# flask CLI commands for ops and testing: init-db (collections + Atlas indexes),
+# create-user, ingest (bulk-load local files) and ask (run the RAG pipeline as a
+# given user). They call the same services as the web routes.
 import os
 
 import click
@@ -10,14 +13,16 @@ from .permissions import document_access, principals_for
 
 
 def init_app(app):
+    """Register all four commands on the flask CLI (called by create_app)."""
     for command in (init_db, create_user_command, ingest, ask):
         app.cli.add_command(command)
 
 
 @click.command("init-db")
 def init_db():
-    """Create collections and indexes."""
+    """Create collections and indexes — runs ensure_indexes() from db.py."""
     ensure_indexes(get_db(), current_app.config, echo=click.echo)
+    # indexes build asynchronously on Atlas; show where they stand right now
     click.echo(f"Search index status: {search_index_status(get_db(), current_app.config)}")
 
 
@@ -27,7 +32,7 @@ def init_db():
 @click.option("--admin", is_flag=True, help="Can upload documents and manage users.")
 @click.password_option()
 def create_user_command(username, groups, admin, password):
-    """Create a user."""
+    """Create a user — same create_user() the admin page calls."""
     try:
         user = create_user(get_db(), username, password, groups=groups, is_admin=admin)
     except UserError as exc:
@@ -41,7 +46,7 @@ def create_user_command(username, groups, admin, password):
 @click.option("--everyone", is_flag=True, help="Visible to every signed-in user.")
 @click.option("--title", default=None, help="Title (only with a single file).")
 def ingest(paths, groups, everyone, title):
-    """Ingest local files."""
+    """Bulk-load local files — same ingest_document() the upload routes call."""
     access = document_access([groups], everyone=everyone)
     if not access:
         raise click.UsageError("Pass --groups or --everyone.")
@@ -49,6 +54,7 @@ def ingest(paths, groups, everyone, title):
         with open(path, "rb") as fh:
             data = fh.read()
         try:
+            # same pipeline as the upload endpoints; "cli" marks bulk-loaded docs
             doc = ingest_document(os.path.basename(path), data, access=access, uploaded_by="cli",
                                   title=title if len(paths) == 1 else None)
             click.echo(f"OK   {path}: {doc['chunk_count']} chunks")
@@ -60,7 +66,8 @@ def ingest(paths, groups, everyone, title):
 @click.argument("question")
 @click.option("--user", "username", required=True, help="Answer with this user's permissions.")
 def ask(question, username):
-    """Ask a question as a user."""
+    """Run the full RAG pipeline as a chosen user — same answer_question() the routes use."""
+    # importing here keeps the answer/retrieval chain out of `flask --help` startup
     from .chat.answer import answer_question
 
     user = get_db()[USERS].find_one({"username": username.lower()})
